@@ -11,12 +11,10 @@ grafo(EstadoActual, EstadoNuevo, Operacion, Costo).
 
 encontrar_mejor_camino(EInicial, Plan, Destino, Costo):- 
 	EInicial = estado([_X,_Y], _Dir, _, _),								% Defino el estado inicial
-	EFinal = estado([XFinal,YFinal], _, ListadoPosesiones, 'no'),		% Defino el estado meta final
-    member([[c, _], [d, _, 'no'], [d, _, 'si']], [ListadoPosesiones]),	
+	EFinal = estado([XFinal,YFinal], _, _, 'no'),						% Defino el estado meta final	
 	Destino = [XFinal, YFinal],											% Retorno el destino con [X,Y]
-	meta(EFinal, [XFinal,YFinal]),										
-	a_estrella([[0,EInicial]], Destino, [Costo | PlanAux]),				% Comienzo a recorrer el grafo con el algoritmo A*
-	reverse(PlanAux, Plan), !.											% Invierto la lista. El resultado es [EInicial, .... , EFinal]	
+	a_estrella([[0,EInicial]], Destino, [Costo, EFinal | PlanAux]),		% Comienzo a recorrer el grafo con el algoritmo A*
+	reverse([EFinal | PlanAux], Plan), !.								% Invierto la lista. El resultado es [EInicial, .... , EFinal]	
 
 a_estrella(Frontera, Destino, [Estado|Camino]):- 
 	member(Nodo, Frontera),

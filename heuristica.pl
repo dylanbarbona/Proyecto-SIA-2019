@@ -68,3 +68,7 @@ h(Estado, Distancia):-
    Estado = estado([XActual, YActual], _, _, _),
    metasOrdenadas(Estado, [[X,Y] | _]),
    Distancia is abs((X-XActual) + (Y-YActual)).
+
+metaFinalMasCercana(EstadoActual, [XFinal,YFinal]):-
+   EstadoActual = estado([_X, _Y], _, _, 'no'),
+   metasOrdenadas(EstadoActual, [[XFinal,YFinal] | _]).
