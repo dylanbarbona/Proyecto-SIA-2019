@@ -7,30 +7,21 @@ Funciones utiles importadas:
 meta(Estado, [X,Y]).
 h(Estado, Distancia).
 grafo(EstadoActual, EstadoNuevo, Operacion, Costo).
-
 */
 
-/* 
-   encontrar_mejor_camino
-   Predicado que aplica A* al grafo anteriormente definido 
-   para encontrar el mejor camino entre el Origen y Destino.
-   Encuentra el mejor camino (uno solo) y lo imprime primero.
-   Nota: Para representar un camino voy a usar una lista
-   que tiene como primer elemento el costo total del camino
-   en distancia y como cola el indice de cada ciudad del camino.
-   O sea, [CostoTotal|Camino_Recorrido].
-*/
-
-encontrar_mejor_camino(Pos1, Pos2):- 
-	ciudad(C1,Origen),
-	ciudad(C2,Destino),
-	a_estrella([[0,C1]], C2, CaminoRev),
-	reverse(CaminoRev, _Camino). 
+encontrar_mejor_camino(EInicial, Plan, Destino, Costo):- 
+	EInicial = estado([_X,_Y], _Dir, _, _),								% Defino el estado inicial
+	EFinal = estado([XFinal,YFinal], _, ListadoPosesiones, 'no'),		% Defino el estado meta final
+    member([[c, _], [d, _, 'no'], [d, _, 'si']], [ListadoPosesiones]),	
+	Destino = [XFinal, YFinal],											% Retorno el destino con [X,Y]
+	meta(EFinal, [XFinal,YFinal]),										
+	a_estrella([[0,EInicial]], Destino, [Costo | PlanAux]),				% Comienzo a recorrer el grafo con el algoritmo A*
+	reverse(PlanAux, Plan), !.											% Invierto la lista. El resultado es [EInicial, .... , EFinal]	
 
 a_estrella(Frontera, Destino, [Estado|Camino]):- 
 	member(Nodo, Frontera),
 	Nodo = [Estado, Destino | Camino],
-	elegir_mejorf(Frontera, [Estado|_]).
+	elegir_mejorf(Frontera, [Estado | _]).
 
 a_estrella(Frontera, Destino, Camino):- 
 	elegir_mejorf(Frontera, Nodo),

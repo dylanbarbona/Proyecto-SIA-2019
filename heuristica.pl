@@ -23,7 +23,15 @@ meta(Estado, [X,Y]):-
 /* Ya encontro el detonador y debe ir al sitio de detonacion */
 meta(Estado, [X,Y]):-
    Estado = estado([_,_], _, ListadoPosesiones, 'no'),
-   member([d, _Detonador, no], ListadoPosesiones),
+   member([d, _, no], ListadoPosesiones),
+   not(member([d, _, si], ListadoPosesiones)),
+   sitioDetonacion([X,Y]).
+
+/* Solo queda detonar la bomba */
+meta(Estado, [X,Y]):-
+   Estado = estado([X,Y], _, ListadoPosesiones, 'no'),
+   member([d, _, no], ListadoPosesiones),
+   member([d, _, si], ListadoPosesiones),
    sitioDetonacion([X,Y]).
 
 /* Obtengo una lista de las metas desordenadas, de acuerdo al estado del minero */
