@@ -1,21 +1,9 @@
 :- include('minaExample.pl').
 
-/*
-estado(PosActual, Dir, _ListaPosesiones, ColocacionCargaPendiente):-
-    PosActual = [X,Y],
-    (Dir = n; Dir = s; Dir = e; Dir = o),                                          
-    (ColocacionCargaPendiente = 'si'; _ColocacionCargaPendiente = 'no').
-*/
-
-
 hay_camino([X,Y], [XNew, YNew], TipoSuelo):-
     celda([X,Y], _TipoSuelo1), celda([XNew,YNew], TipoSuelo),
     ((XNew is X+1, YNew is Y); (XNew is X-1, YNew is Y);
      (XNew is X, YNew is Y+1); (XNew is X, YNew is Y-1)).
-
-tieneLlave(Llave, [Llave]):- !.
-tieneLlave(Llave, [Llave | _ListaPosesiones]):- !.
-tieneLlave(Llave, [X | ListaPosesiones]):- X \= Llave, tieneLlave(Llave, ListaPosesiones).
 
 
 /*
@@ -32,15 +20,17 @@ grafo(EstadoActual, EstadoNuevo, caminar, Costo):-
     not(estaEn([v, _Valla, _AlturaValla], [XNew, YNew])),                           % No puede cruzar un camino con valla, necesariamente debe saltarla.
     (
         (not(estaEn([r, _Reja],[XNew,YNew])));                                      % O biene no hay una reja
-        (estaEn([r, Reja],[XNew,YNew]), tieneLlave([l,Llave], ListadoPosesiones), abreReja([l,Llave],[r,Reja]))    % O bien hay una y la cruza solo si tiene la llave correspondiente
+        (estaEn([r, Reja],[XNew,YNew]), member([l,Llave], ListadoPosesiones), abreReja([l,Llave],[r,Reja]))    % O bien hay una y la cruza solo si tiene la llave correspondiente
     ),
     EstadoNuevo = estado([XNew,YNew], Dir, ListadoPosesiones, ColocacionCargaPendiente).       % Se crea un nuevo hecho con la direccion nueva 
+
 
 /*
 Operacion para rotar(Dir).
 */
 grafo(EstadoActual, EstadoNuevo, rotar(Dir), Costo):-
     EstadoActual = estado([X,Y], DirVieja, ListadoPosesiones, ColocacionCargaPendiente),
+    (Dir = n; Dir = s; Dir = e; Dir = o),
     (DirVieja \= Dir),                                                             % Debe haber necesariamente un cambio de direcciones
     (                                                                              % Se obtienen los costos asociados a las distintas posibilidades de las direcciones
      (DirVieja == n, Dir == s, Costo = 2);
@@ -71,9 +61,9 @@ grafo(EstadoActual, EstadoNuevo, saltar_valla(Valla), Costo):-
     AlturaV =< 4,                                                                   % La altura de la valla debe ser menor que 4
     not(estaEn([p,_,_],[XNew,YNew])),                                               % No puede saltar pilares
     not(estaEn([r,_],[XNew,YNew])),                                                 % No puede pasar rejas saltando
-    EstadoIntermedio1 = estado([XNew,YNew], Dir, ListaPosesiones, ColocacionCargaPendiente),    % Estado intermedio para obtener el costo del suelo donde va a caer
+    EstadoIntermedio1 = estado([XNew,YNew], Dir, ListadoPosesiones, ColocacionCargaPendiente),    % Estado intermedio para obtener el costo del suelo donde va a caer
     grafo(EstadoIntermedio1, EstadoIntermedio2, caminar, CostoSalto),
-    EstadoIntermedio2 = estado([XSalto,YSalto], Dir, ListaPosesiones, ColocacionCargaPendiente), % Estado intermedio para obtener ese resultado
+    EstadoIntermedio2 = estado([XSalto,YSalto], Dir, ListadoPosesiones, ColocacionCargaPendiente), % Estado intermedio para obtener ese resultado
     Costo is CostoSalto+1,
     ((Dir == n, XNew is X, YNew is Y-1); (Dir == s, XNew is X, YNew is Y+1);        % Obtiene las posiciones validas de acuerdo a la direccion del minero
     (Dir == o, YNew is X, XNew is X-1); (Dir == e, YNew is Y, XNew is X+1)),
@@ -86,23 +76,53 @@ Operacion para juntar_llave(Llave)
 
 grafo(EstadoActual, EstadoNuevo, juntar_llave(Llave), Costo):-
     EstadoActual = estado([X,Y], Dir, ListadoPosesiones, ColocacionCargaPendiente),
-    estaEn([l,Llave], [X,Y]),                       % Evalua si existe la llave en la Celda
-    not(tieneLlave([l,Llave], ListadoPosesiones)),  % No tiene que tener esa llave
-    Costo = 1,                                      % Esto tiene un costo de 1
-    EstadoNuevo = estado([X,Y], Dir, [[l,Llave] | ListadoPosesiones], ColocacionCargaPendiente).
+    Llave = [l, _NombreL],
+    estaEn(Llave, [X,Y]),                                                                       % Evalua si existe la llave en la Celda
+    Costo = 1,                                                                                  % Esto tiene un costo de 1
+    not(member(Llave, ListadoPosesiones)),
+    EstadoNuevo = estado([X,Y], Dir, [Llave | ListadoPosesiones], ColocacionCargaPendiente).    % Se agrega la llave a la lista de posesiones
 
 /*
-Operaacion para juntar_carga(Carga)
+Operacion para juntar_carga(Carga)
 */
 
-grafo(EstadoActual, EstadoSiguiente, juntar_carga(Carga), Costo):-
-    
+grafo(EstadoActual, EstadoNuevo, juntar_carga(Carga), Costo):-
+    EstadoActual = estado([X,Y], Dir, ListadoPosesiones, _ColocacionCargaPendiente),
+    Carga = [c, _NombreC],
+    estaEn(Carga, [X,Y]),                                                          % Evalua si la carga esta en su posicion
+    not(member(Carga, ListadoPosesiones)),
+    Costo = 3,                                                                          % Esto tiene un costo de 3
+    EstadoNuevo = estado([X,Y], Dir, [Carga | ListadoPosesiones], 'si').           % Se agrega la carga y se setea la colocación pendiente como si
 
 /*
-juntar_carga(Carga). Carga = [c, NombreC]
-juntar_detonador(Detonador). Detonador = [d, NombreD, ActivadoD].
-dejar_carga(Carga). Carga = [c, NombreC]
-detonar(Detonador). Detonador = [d, NombreD, ActivadoD].
+Operacion para juntar_detonador(Detonador)
+*/  
 
-tieneLlave([l,Llave]).
+grafo(EstadoActual, EstadoNuevo, juntar_detonador(Detonador), Costo):-
+    EstadoActual = estado([X,Y], Dir, ListadoPosesiones, ColocacionCargaPendiente),
+    Detonador = [d, _NombreD, no],
+    estaEn(Detonador, [X,Y]),
+    not(member(Detonador, ListadoPosesiones)),
+    Costo = 2,
+    EstadoNuevo = estado([X,Y], Dir, [Detonador | ListadoPosesiones], ColocacionCargaPendiente).
+
+/*
+Operacion para dejar_carga(Carga)
 */
+grafo(EstadoActual, EstadoNuevo, dejar_carga(Carga), Costo):-
+    EstadoActual = estado([X,Y], Dir, ListadoPosesiones, 'si'),
+    ubicacionCarga([X,Y]),
+    member(Carga, ListadoPosesiones),
+    Costo = 1,
+    EstadoNuevo = estado([X,Y], Dir, ListadoPosesiones, 'no').
+
+/*
+Operacion para detonar(Detonador)
+*/
+grafo(EstadoActual, EstadoNuevo, detonar(Detonador), Costo):-
+    EstadoActual = estado([X,Y], Dir, ListadoPosesiones, 'no'),
+    Detonador = [d, NombreD, 'no'],
+    member(Detonador, ListadoPosesiones),
+    sitioDetonacion([X,Y]),
+    Costo = 1,
+    EstadoNuevo = estado([X,Y], Dir, [[d, NombreD, 'si'] | ListadoPosesiones], 'no').

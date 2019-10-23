@@ -1,18 +1,5 @@
-:- include('minaExample.pl').
+:- include('grafo.pl').
 
-/* Celda(Pos = [PosX, PosY], TipoSuelo) */
-/* EstaEn(Objeto, [PosX, PosY])*/
-/* Grafo(PosActual, PosSiguiente, Operacion, Costo)
-    Operacion = 
-    caminar.
-    rotar(Dir).
-    saltarValla(Valla).
-    juntar_llave(Llave).
-    juntar_carga(Carga).
-    dejar_carga(Carga).
-    juntar_detonador(Detonador).
-    detonar(Detonador).
-*/
 /* heuristica usada: distancia de la posicion actual hasta la proxima meta */
 
 /* 
@@ -25,9 +12,10 @@
    en distancia y como cola el indice de cada ciudad del camino.
    O sea, [CostoTotal|Camino_Recorrido].
 */
+
 encontrar_mejor_camino(Pos1, Pos2):- 
-	C1 = celda(Pos1,_),
-	C2 = celda(Pos2,_),
+	ciudad(C1,Origen),
+	ciudad(C2,Destino),
 	a_estrella([[0,C1]], C2, CaminoRev),
 	reverse(CaminoRev, _Camino). 
 
