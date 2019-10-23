@@ -5,7 +5,6 @@ hay_camino([X,Y], [XNew, YNew], TipoSuelo):-
     ((XNew is X+1, YNew is Y); (XNew is X-1, YNew is Y);
      (XNew is X, YNew is Y+1); (XNew is X, YNew is Y-1)).
 
-
 /*
 Operacion para caminar.
 */
@@ -99,12 +98,12 @@ Operacion para juntar_detonador(Detonador)
 */  
 
 grafo(EstadoActual, EstadoNuevo, juntar_detonador(Detonador), Costo):-
-    EstadoActual = estado([X,Y], Dir, ListadoPosesiones, ColocacionCargaPendiente),
+    EstadoActual = estado([X,Y], Dir, ListadoPosesiones, 'no'),
     Detonador = [d, _NombreD, no],
     estaEn(Detonador, [X,Y]),
     not(member(Detonador, ListadoPosesiones)),
     Costo = 2,
-    EstadoNuevo = estado([X,Y], Dir, [Detonador | ListadoPosesiones], ColocacionCargaPendiente).
+    EstadoNuevo = estado([X,Y], Dir, [Detonador | ListadoPosesiones], 'no').
 
 /*
 Operacion para dejar_carga(Carga)

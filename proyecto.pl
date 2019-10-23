@@ -1,6 +1,14 @@
-:- include('grafo.pl').
+:- include('heuristica.pl').
 
-/* heuristica usada: distancia de la posicion actual hasta la proxima meta */
+
+/*
+Funciones utiles importadas:
+
+meta(Estado, [X,Y]).
+h(Estado, Distancia).
+grafo(EstadoActual, EstadoNuevo, Operacion, Costo).
+
+*/
 
 /* 
    encontrar_mejor_camino

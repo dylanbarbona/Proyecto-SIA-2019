@@ -1,35 +1,7 @@
-
-:- include('grafo.pl').
-
 /* Grafo de fronteras y pesos (distancias)
    Agregado el ciclo pedido
 */
 
-meta([X,Y]):-
-   sitioDetonacion([X,Y]).
-
-metasDesordenadas(ListaMetas):-
-   findall([X,Y], meta([X,Y]), ListaMetas).
-
-distanciasMeta([_XInicial, _YInicial], [], []).
-distanciasMeta([XInicial, YInicial], [[X,Y] | ListaMetas], [Resultado-[X,Y] | ListaResultados]):-
-   Resultado is sqrt((X-XInicial)^2 + (Y-YInicial)^2),
-   distanciasMeta([XInicial, YInicial], ListaMetas, ListaResultados).
-
-separar_pares_valores([], []).
-separar_pares_valores([_-V|T0], [V|T]) :-
-   separar_pares_valores(T0, T).
-
-metasOrdenadas([XInicial, YInicial], MetasOrdenadas):-
-   metasDesordenadas(ListaMetas),
-   distanciasMeta([XInicial, YInicial], ListaMetas, ListaResultados),
-   keysort(ListaResultados, Pares),
-   separar_pares_valores(Pares, MetasOrdenadas).
-
-h([X,Y], Meta):- metasOrdenadas([X,Y], [Meta | _]).
-
-
-/*
 grafo(1,2,operacion,199).
 grafo(1,3,operacion,264).
 grafo(1,4,operacion,237).
@@ -40,7 +12,6 @@ grafo(6,7,operacion,207).
 grafo(5,7,operacion,118).
 grafo(5,8,operacion,130).
 grafo(8,2,operacion,47).
-*/
 
 /* heuristica usada                  */
 /* distancia en linea recta ficticia */
