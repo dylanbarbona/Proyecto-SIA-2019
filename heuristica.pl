@@ -59,4 +59,4 @@ metasOrdenadas(Estado, MetasOrdenadas):-
 h(Estado, Distancia):-
    Estado = estado([XActual, YActual], _, _, _),
    metasOrdenadas(Estado, [[X,Y] | _]),
-   Distancia is sqrt((X-XActual)^2 + (Y-YActual)^2). 
+   Distancia is abs((X-XActual) + (Y-YActual)).
