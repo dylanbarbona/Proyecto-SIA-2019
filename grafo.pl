@@ -5,7 +5,9 @@ hay_camino([X,Y], [XNew, YNew], TipoSuelo):-
     ((XNew is X+1, YNew is Y); (XNew is X-1, YNew is Y);
      (XNew is X, YNew is Y+1); (XNew is X, YNew is Y-1)).
 
-
+/*
+Operacion para caminar.
+*/
 grafo(EstadoActual, EstadoNuevo, caminar, Costo):- 
     EstadoActual = estado([X,Y], Dir, ListadoPosesiones, ColocacionCargaPendiente),
     hay_camino([X,Y], [XNew, YNew], TipoSuelo),                                     % Encuentra un camino de [X,Y] a [XNew, YNew]
@@ -22,6 +24,9 @@ grafo(EstadoActual, EstadoNuevo, caminar, Costo):-
     EstadoNuevo = estado([XNew,YNew], Dir, ListadoPosesiones, ColocacionCargaPendiente).       % Se crea un nuevo hecho con la direccion nueva 
 
 
+/*
+Operacion para rotar(Dir).
+*/
 grafo(EstadoActual, EstadoNuevo, rotar(Dir), Costo):-
     EstadoActual = estado([X,Y], DirVieja, ListadoPosesiones, ColocacionCargaPendiente),
     member(Dir, [n, s, e, o]),
@@ -42,7 +47,11 @@ grafo(EstadoActual, EstadoNuevo, rotar(Dir), Costo):-
     ),
     EstadoNuevo = estado([X,Y], Dir, ListadoPosesiones, ColocacionCargaPendiente).       % Se crea un nuevo hecho con la direccion nueva 
 
+/*
+Operacion para saltar(Dir).
 
+Falta hacer que solamente sea posible que salte una vez
+*/
 grafo(EstadoActual, EstadoNuevo, saltar_valla(Valla), Costo):-
     EstadoActual = estado([X,Y], Dir, ListadoPosesiones, ColocacionCargaPendiente),
     Valla = [v, _NombreV, AlturaV],                                                 % Obtiene la direccion actual del minero
@@ -61,6 +70,9 @@ grafo(EstadoActual, EstadoNuevo, saltar_valla(Valla), Costo):-
     
     EstadoNuevo = estado([XSalto,YSalto], Dir, ListadoPosesiones, ColocacionCargaPendiente).
 
+/*
+Operacion para juntar_llave(Llave)
+*/
 
 grafo(EstadoActual, EstadoNuevo, juntar_llave(Llave), Costo):-
     EstadoActual = estado([X,Y], Dir, ListadoPosesiones, ColocacionCargaPendiente),
@@ -70,6 +82,9 @@ grafo(EstadoActual, EstadoNuevo, juntar_llave(Llave), Costo):-
     not(member(Llave, ListadoPosesiones)),
     EstadoNuevo = estado([X,Y], Dir, [Llave | ListadoPosesiones], ColocacionCargaPendiente).    % Se agrega la llave a la lista de posesiones
 
+/*
+Operacion para juntar_carga(Carga)
+*/
 
 grafo(EstadoActual, EstadoNuevo, juntar_carga(Carga), Costo):-
     EstadoActual = estado([X,Y], Dir, ListadoPosesiones, _ColocacionCargaPendiente),
@@ -77,14 +92,21 @@ grafo(EstadoActual, EstadoNuevo, juntar_carga(Carga), Costo):-
     estaEn(Carga, [X,Y]),                                                          % Evalua si la carga esta en su posicion
     not(member(Carga, ListadoPosesiones)),
     Costo = 3,                                                                          % Esto tiene un costo de 3
-    EstadoNuevo = estado([X,Y], Dir, [Carga | ListadoPosesiones], 'si').           % Se agrega la carga y se setea la colocación pendiente como si
+    EstadoNuevo = estado([X,Y], Dir, [Carga | ListadoPosesiones], 'si').           % Se agrega la carga y se setea la colocaciï¿½n pendiente como si
 
+/*
+Operacion para dejar_carga(Carga)
+*/
 grafo(EstadoActual, EstadoNuevo, dejar_carga(Carga), Costo):-
     EstadoActual = estado([X,Y], Dir, ListadoPosesiones, 'si'),
     ubicacionCarga([X,Y]),
     member(Carga, ListadoPosesiones),
     Costo = 1,
     EstadoNuevo = estado([X,Y], Dir, ListadoPosesiones, 'no').
+
+/*
+Operacion para juntar_detonador(Detonador)
+*/  
 
 grafo(EstadoActual, EstadoNuevo, juntar_detonador(Detonador), Costo):-
     EstadoActual = estado([X,Y], Dir, ListadoPosesiones, 'no'),
@@ -95,6 +117,9 @@ grafo(EstadoActual, EstadoNuevo, juntar_detonador(Detonador), Costo):-
     Costo = 2,
     EstadoNuevo = estado([X,Y], Dir, [Detonador | ListadoPosesiones], 'no').
 
+/*
+Operacion para detonar(Detonador)
+*/
 grafo(EstadoActual, EstadoNuevo, detonar(Detonador), Costo):-
     EstadoActual = estado([X,Y], Dir, ListadoPosesiones, 'no'),
     Detonador = [d, NombreD, 'no'],

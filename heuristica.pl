@@ -34,52 +34,32 @@ meta(Estado, [X,Y]):-
    member([d, _, si], ListadoPosesiones),
    sitioDetonacion([X,Y]).
 
-/* Obtengo una lista de las metas desordenadas, de acuerdo al estado del minero */
-metasDesordenadas(Estado, ListaMetas):-
-   Estado = estado([_,_], _, _ListadoPosesiones, _ColocacionCargaPendiente),
-   findall([X,Y], meta(Estado, [X,Y]), ListaMetas).
+/* Esta heuristica retorna la distancia de la meta mas cercana */
+h(Estado, Metas, Distancia):-
+    metasOrdenadas(Estado, Metas, [[Xm,Ym] | _]),
+    Estado = estado([X,Y], _, _, _),
+    Distancia is (Xm-X) + (Ym-Y).
 
-/*Obtiene una lista con las distancias del estado actual hasta las metas
-   con el formato Resultado-[X,Y].
-*/
+metasOrdenadas(Estado, ListaMetas, MetasOrdenadas):-
+   distanciasMeta(Estado, ListaMetas, ListaResultados),
+   keysort(ListaResultados, Pares),
+   separar_pares_valores(Pares, MetasOrdenadas), !.
+    
 distanciasMeta(_Estado, [], []).
 distanciasMeta(Estado, [[X,Y] | ListaMetas], [Resultado-[X,Y] | ListaResultados]):-
    Estado = estado([XInicial, YInicial], _, _, _),
    Resultado is sqrt((X-XInicial)^2 + (Y-YInicial)^2),
    distanciasMeta(Estado, ListaMetas, ListaResultados).
 
-/* Auxiliar para separar las metas de las distancias */
 separar_pares_valores([], []).
 separar_pares_valores([_-V|T0], [V|T]) :-
    separar_pares_valores(T0, T).
+    
 
-/*
-Ordena todas las metas
-*/
-metasOrdenadas(Estado, MetasOrdenadas):-
-   Estado = estado([_XInicial, _YInicial], _, _, _),
-   metasDesordenadas(Estado, ListaMetas),
-   distanciasMeta(Estado, ListaMetas, ListaResultados),
-   keysort(ListaResultados, Pares),
-   separar_pares_valores(Pares, MetasOrdenadas), !.
-
-metaMasCercana(Estado, [X,Y]):-
-   metasOrdenadas(Estado, [[X,Y]| _]).
-
-/* Esta heuristica retorna la distancia de la meta mas cercana */
-h(Estado, Distancia):-
-   Estado = estado([XActual, YActual], _, _, _),
-   metasOrdenadas(Estado, [[X,Y] | _]),
-   Distancia is abs((X-XActual) + (Y-YActual)).
-
-metaFinalMasCercana(EstadoActual, EstadoMeta):-
-   EstadoActual = estado([_X, _Y], _, ListadoPosesiones, 'no'),
-   member([c,_], ListadoPosesiones),
-   member([d, _, no], ListadoPosesiones),
-   metasOrdenadas(EstadoActual, [[XFinal,YFinal] | _]),
-   EstadoMeta = estado([XFinal, YFinal], _, ListadoPosesiones, 'no').
-
-esMetaFinal(Estado):-
-   metaFinalMasCercana(Estado, Meta),
-   Estado = estado([X,Y], _, _, _),
-   Meta = estado([X,Y], _, _, _).
+obtenerListaMetas(ListaMetas):-
+   	findall([X,Y], meta(estado([_,_], _, [], no), [X,Y]), MetasBuscarCarga),
+   	findall([X,Y], meta(estado([_,_], _, [[c,_]], si), [X,Y]), MetasUbicarCarga), 
+   	findall([X,Y], meta(estado([_,_], _, [[c,_]], no), [X,Y]), MetasEncontrarDetonador), 
+   	findall([X,Y], meta(estado([_,_], _, [[c,_], [d,_,no]], no), [X,Y]), MetasIrADetonacion),
+    findall([X,Y], meta(estado([X,Y], _, [[c,_], [d,_,no], [d,_,si]], no), [X,Y]), MetasDetonarCarga),
+    ListaMetas = [MetasBuscarCarga, MetasUbicarCarga, MetasEncontrarDetonador, MetasIrADetonacion, MetasDetonarCarga].
