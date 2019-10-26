@@ -63,12 +63,23 @@ metasOrdenadas(Estado, MetasOrdenadas):-
    keysort(ListaResultados, Pares),
    separar_pares_valores(Pares, MetasOrdenadas), !.
 
+metaMasCercana(Estado, [X,Y]):-
+   metasOrdenadas(Estado, [[X,Y]| _]).
+
 /* Esta heuristica retorna la distancia de la meta mas cercana */
 h(Estado, Distancia):-
    Estado = estado([XActual, YActual], _, _, _),
    metasOrdenadas(Estado, [[X,Y] | _]),
    Distancia is abs((X-XActual) + (Y-YActual)).
 
-metaFinalMasCercana(EstadoActual, [XFinal,YFinal]):-
-   EstadoActual = estado([_X, _Y], _, _, 'no'),
-   metasOrdenadas(EstadoActual, [[XFinal,YFinal] | _]).
+metaFinalMasCercana(EstadoActual, EstadoMeta):-
+   EstadoActual = estado([_X, _Y], _, ListadoPosesiones, 'no'),
+   member([c,_], ListadoPosesiones),
+   member([d, _, no], ListadoPosesiones),
+   metasOrdenadas(EstadoActual, [[XFinal,YFinal] | _]),
+   EstadoMeta = estado([XFinal, YFinal], _, ListadoPosesiones, 'no').
+
+esMetaFinal(Estado):-
+   metaFinalMasCercana(Estado, Meta),
+   Estado = estado([X,Y], _, _, _),
+   Meta = estado([X,Y], _, _, _).

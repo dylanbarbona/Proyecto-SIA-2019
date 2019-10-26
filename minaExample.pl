@@ -2,6 +2,8 @@
 
   Representacion grafica de una mina irregular con 14 filas y 13 columnas:
 
+
+
      1   2   3   4
    _________________
 1  | ~ | P | ~ | ~ |

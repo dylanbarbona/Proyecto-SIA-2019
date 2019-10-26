@@ -82,6 +82,7 @@ Buscamos todos los nodos del grafo que
    de los ciclos.
 */
 expandir_frontera([Costo,Ciudad|Camino],Caminos):- 
+   print([Costo,Ciudad|Camino]),
 	findall([Costo,CiudadNueva,Ciudad|Camino],
 		(grafo(Ciudad, CiudadNueva, _Operacion,_),
 		not(member(CiudadNueva,Camino))),

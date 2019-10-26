@@ -10,54 +10,69 @@ grafo(EstadoActual, EstadoNuevo, Operacion, Costo).
 */
 
 encontrar_mejor_camino(EInicial, Plan, Destino, Costo):- 
-	EInicial = estado([_X,_Y], _Dir, _, _),								% Defino el estado inicial
-	EFinal = estado([XFinal,YFinal], _, _, 'no'),						% Defino el estado meta final	
-	Destino = [XFinal, YFinal],											% Retorno el destino con [X,Y]
-	a_estrella([[0,EInicial]], Destino, [Costo, EFinal | PlanAux]),		% Comienzo a recorrer el grafo con el algoritmo A*
-	reverse([EFinal | PlanAux], Plan), !.								% Invierto la lista. El resultado es [EInicial, .... , EFinal]	
+	a_estrella([[0,EInicial]], [], [[Costo | EFinal] | CaminoRev]),
+    Destino = [X,Y],
+    EFinal = estado([X,Y],_,_,_),
+	reverse([EFinal | CaminoRev], Plan).
+    
+a_estrella(Frontera, _Vis, [Costo, Estado | Camino]):-
+	elegir_mejorf(Frontera, NodoF),
+    NodoF = [Costo, Estado | Camino],
+    esMeta(Estado).
 
-a_estrella(Frontera, Destino, [Estado|Camino]):- 
-	member(Nodo, Frontera),
-	Nodo = [Estado, Destino | Camino],
-	elegir_mejorf(Frontera, [Estado | _]).
+a_estrella(Frontera, Visitados, MejorCamino):- 
+    elegir_mejorf(Frontera, Nodo),
+	delete(Frontera, Nodo, FronteraSinNodo),
+	vecinos(Nodo, Frontera, Visitados, Vecinos),
+	eliminar_peores_caminos(Vecinos, FronteraSinNodo, NuevaFrontera),
+    Nodo = [_Costo, Estado | _Camino],
+    metaMasCercana(Estado, [X,Y]),
+	writeln([X,Y]),
+	a_estrella(NuevaFrontera, [Estado | Visitados], MejorCamino).
 
-a_estrella(Frontera, Destino, Camino):- 
-	elegir_mejorf(Frontera, Nodo),
-	seleccionar(Nodo, Frontera, FronteraSinNodo),
-	vecinos(Nodo, NuevosCaminos),
-	agregar(NuevosCaminos, FronteraSinNodo, L),
-	a_estrella(L, Destino, Camino).
+eliminar_peores_caminos([], CaminosViejos, CaminosViejos).
 
-seleccionar(Nodo, Caminos, FronteraSinNodo):-
-	delete(Caminos, Nodo, FronteraSinNodo).
+eliminar_peores_caminos([[CostoNuevo, [Estado | CaminoNuevo]] | RestoCaminosNuevos], CaminosViejos, [[CostoNuevo, [Estado | CaminoNuevo]] | RestoCaminosFiltrados]):-
+	member([CostoViejo, [Estado|RestoViejo]], CaminosViejos),
+	CostoNuevo < CostoViejo,
+	delete([CostoViejo, [Estado | RestoViejo]], CaminosViejos, CaminosViejosSinPeor),
+	eliminar_peores_caminos(RestoCaminosNuevos, CaminosViejosSinPeor, RestoCaminosFiltrados).
 
-agregar(Vecinos, ViejaFrontera, NuevaFrontera) :-
-    append(Vecinos, ViejaFrontera, NuevaFrontera).
+eliminar_peores_caminos([[_CostoNuevo, [Estado |_CaminoNuevo]] | RestoCaminosNuevos], CaminosViejos, CaminosFiltrados):-
+	member([_CostoViejo,[Estado | _RestoViejo]], CaminosViejos),
+	eliminar_peores_caminos(RestoCaminosNuevos, CaminosViejos, CaminosFiltrados).
 
-vecinos([Costo,PosActual|Camino], Caminos):- 
-	findall([Costo,PosSiguiente,PosActual|Camino], (grafo(PosActual, PosSiguiente, _, _), not(member(PosSiguiente,Camino))), L),
-	cambiar_costos(L, Caminos).
+eliminar_peores_caminos([CaminoNuevo | RestoCaminosNuevos], CaminosViejos, [CaminoNuevo | RestoCaminosFiltrados]):-
+	eliminar_peores_caminos(RestoCaminosNuevos, CaminosViejos, RestoCaminosFiltrados).
+
+
+vecinos(Nodo, Frontera, Visitados, Vecinos):-
+	Nodo = [Costo, Estado | Camino],
+    findall(
+    	[Costo, EstadoSiguiente, Estado | Camino],
+        (grafo(Estado, EstadoSiguiente, _, _),
+         not(member(EstadoSiguiente, Visitados)),
+         not(member([EstadoSiguiente | _], Frontera))),
+        Lista),
+    cambiar_costos(Lista, Vecinos).
 
 cambiar_costos([],[]):- !.
-cambiar_costos([[CostoTotal, C1, C2 | Camino] | Y], [[NuevoCostoTotal, C1, C2 | Camino] | Z]):-
-	grafo(C2, C1, _Operacion, CostoOperacion),
+cambiar_costos([[CostoTotal, EstadoSiguiente, EstadoActual | Camino] | Y],
+               [[NuevoCostoTotal, EstadoSiguiente, EstadoActual | Camino] | Z]):-
+	grafo(EstadoActual, EstadoSiguiente, _, CostoOperacion),
 	NuevoCostoTotal is CostoTotal + CostoOperacion,
 	cambiar_costos(Y,Z).
 
+elegir_mejorf([X], X):- !.
 
-/*Mejorar este predicado*/
-/*Para eso tengo que mejorar las heuristicas. Calculo que tengo
-que crear un predicado h(C, H) Donde C sea la celda actual, y H la distancia a la meta mas cercana (La meta varia de acuerdo
-a los objetivos del minero)
-*/
-elegir_mejorf([X],X):- !.
-elegir_mejorf([[C1,Ci1|Y],[C2,Ci2|_]|Z], MejorF):-
-	h(Ci1, H1),
-	h(Ci2, H2),
+elegir_mejorf([[C1, E1 | Y], [C2, E2 | _] | Z], MejorF):-
+	h(E1, H1),
+	h(E2, H2),
 	H1 +  C1 =< H2 +  C2,
-	elegir_mejorf([[C1,Ci1|Y]|Z], MejorF).
-elegir_mejorf([[C1,Ci1|_],[C2,Ci2|Y]|Z], MejorF):-
-	h(Ci1, H1),
-	h(Ci2, H2),
-	H1  + C1 > H2 +  C2,
-	elegir_mejorf([[C2,Ci2|Y]|Z], MejorF).
+	elegir_mejorf([[C1, E1 | Y] | Z], MejorF).
+
+elegir_mejorf([[C1, E1 | _], [C2, E2 | Y] | Z], MejorF):-
+	h(E1, H1),
+	h(E2, H2),
+	H1 + C1 > H2 +  C2,
+	elegir_mejorf([[C2, E2 | Y] | Z], MejorF).
